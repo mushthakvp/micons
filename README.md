@@ -38,3 +38,6 @@ class MyWidget extends StatelessWidget {
 
 In this example, MiCons.badgeCheck is the icon being used, but you can replace MiCons.badgeCheck with any icon name from the M-Icons pack that suits your needs.
 
+## Contributing
+
+We welcome contributions to M-Icons! If you have suggestions for new icons or improvements, please open an issue or submit a pull request on our [GitHub repository](https://github.com/mushthakvp/micons).
