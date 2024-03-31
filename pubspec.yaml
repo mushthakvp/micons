@@ -1,7 +1,7 @@
 name: micons
 description: "M-Icons is a collection of icons for Flutter."
 version: 0.0.1
-homepage:
+homepage: https://github.com/mushthakvp/micons.git
 
 environment:
   sdk: '>=3.3.1 <4.0.0'
