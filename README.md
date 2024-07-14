@@ -48,6 +48,35 @@ In this example, MiCons.badgeCheck is the icon being used, but you can replace M
 
 M-Icons also provides a convenient file uploader feature that allows you to easily upload files to your desired location. Below is an example of how to use the file uploader:
 
+# Upload
+
+```dart
+MIconsUploader.uploadFiles(
+  files: files,
+  apiKey: "API_KEY",
+  folder: "FOLDER_NAME",
+).listen(
+  (progress) {
+    log("Progress for ${progress.fileKey} is ${progress.progress * 100}%");
+    if (progress.url != null) {
+      uploadedUrls[progress.fileKey] = progress.url!;
+    }
+    if (progress.urls != null) {
+      uploadedUrls = progress.urls!;
+    }
+  },
+  onDone: () {
+    log("All files uploaded. URLs:");
+    uploadedUrls.forEach((key, url) {
+      log("File key: $key, URL: $url");
+    });
+  },
+  onError: (error) {
+    log('Error in upload stream: $error');
+  },
+);
+```
+
 
 ```dart
 import 'dart:io';
