@@ -1,4 +1,8 @@
+import 'dart:developer';
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:micons/icons.dart';
 import 'package:micons/micons.dart';
 
@@ -16,7 +20,7 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),
+      home: const MyHomePage(title: 'MICons Example'),
     );
   }
 }
@@ -31,12 +35,39 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  int _counter = 0;
+  Map<String, File> files = {};
+  Map<String, String> uploadedUrls = {};
 
-  void _incrementCounter() {
-    setState(() {
-      _counter++;
-    });
+  void imagePicker() async {
+    ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      files["image"] = File(image.path);
+      MIconsUploader.uploadFiles(
+        files: files,
+        apiKey: "API_KEY",
+        folder: "FOLDER_NAME",
+      ).listen(
+        (progress) {
+          log("Progress for ${progress.fileKey} is ${progress.progress * 100}%");
+          if (progress.url != null) {
+            uploadedUrls[progress.fileKey] = progress.url!;
+          }
+          if (progress.urls != null) {
+            uploadedUrls = progress.urls!;
+          }
+        },
+        onDone: () {
+          log("All files uploaded. URLs:");
+          uploadedUrls.forEach((key, url) {
+            log("File key: $key, URL: $url");
+          });
+        },
+        onError: (error) {
+          log('Error in upload stream: $error');
+        },
+      );
+    }
   }
 
   @override
@@ -50,52 +81,25 @@ class _MyHomePageState extends State<MyHomePage> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: <Widget>[
-            const Text(
-              'You have pushed the button this many times:',
-            ),
-            Text(
-              '$_counter',
-              style: Theme.of(context).textTheme.headlineMedium,
-            ),
-            const SizedBox(height: 20),
-            // const Text(MiCons.home),
             MIcons(
               icon: MiCons.badgeCheck,
               color: Colors.black,
               size: 80,
-            ),
-            const SizedBox(height: 20),
-            MIcons(
-              icon: MiCons.badgeCheck,
-              color: Colors.black,
-              size: 80,
-              filled: true,
             ),
             const SizedBox(height: 40),
-            ElevatedButton(
+            const Text("Upload Files Demo"),
+            TextButton(
               onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute<void>(
-                  builder: (BuildContext context) {
-                    return Scaffold(
-                      appBar: AppBar(
-                        title: const Text('Second Page'),
-                      ),
-                      body: const Center(
-                        child: Text('This is the second page'),
-                      ),
-                    );
-                  },
-                ));
+                imagePicker();
               },
-              child: const Text('Go to second page'),
+              child: MIcons(
+                icon: MiCons.icloud,
+                color: Colors.black,
+                size: 40,
+              ),
             ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _incrementCounter,
-        tooltip: 'Increment',
-        child: const Icon(Icons.add),
       ),
     );
   }

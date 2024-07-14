@@ -26,4 +26,5 @@ class MiCons {
   static String bug = "bug";
   static String adjustment = "adjustment";
   static String badgeCheck = "badgeCheck";
+  static String icloud = "icloud";
 }

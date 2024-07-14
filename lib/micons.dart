@@ -1,7 +1,10 @@
 library micons;
 
+import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
+import 'package:cloudinary/cloudinary.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -16,7 +19,7 @@ import 'package:micons/source.dart';
 /// The [MIcons] class has a [build] method that returns a [SvgPicture] widget.
 /// The [SvgPicture] widget displays the SVG icon.
 
-class MIcons extends StatefulWidget {
+class MIcons extends StatelessWidget {
   const MIcons({
     super.key,
     required this.icon,
@@ -29,17 +32,16 @@ class MIcons extends StatefulWidget {
   final double? size;
   final bool? filled;
 
-  @override
-  State<MIcons> createState() => _MIconsState();
-}
+ 
 
-class _MIconsState extends State<MIcons> {
+
+
   @override
   Widget build(BuildContext context) {
     /// The [processedIcon] variable is used to store the processed SVG icon.
     /// The [processedIcon] variable is initialized to an empty string.
     String processedIcon = Source.getSource(
-      widget.filled == true ? "${widget.icon}Outline" : widget.icon,
+      filled != true ? "${icon}Outline" : icon,
     );
 
     /// The [processedIcon] variable is used to store the processed SVG icon.
@@ -63,17 +65,103 @@ class _MIconsState extends State<MIcons> {
       data,
 
       /// The [height] and [width] properties are set to 34.
-      height: widget.size ?? 34,
-      width: widget.size ?? 34,
+      height: size ?? 34,
+      width: size ?? 34,
 
       /// The [color] property is set to [Theme.of(context).colorScheme.onPrimary].
       /// This is the color of the icon.
       cacheColorFilter: true,
-      color: widget.color ?? Colors.black,
+      color: color ?? Colors.black,
 
       /// The [fit] property is set to [BoxFit.contain].
       /// This is the fit of the icon.
       /// The [BoxFit.contain] value is used to scale the icon to fit the parent widget.
     );
+  }
+
+
+}
+
+class UploadProgress {
+  final String fileKey;
+  final String fileName;
+  final double progress;
+  final String? url;
+  final Map<String, String>? urls;
+  final String? error;
+
+  UploadProgress({
+    required this.fileKey,
+    required this.fileName,
+    required this.progress,
+    this.url,
+    this.urls,
+    this.error,
+  });
+}
+
+class MIconsUploader {
+  static Stream<UploadProgress> uploadFiles({
+    required Map<String, File> files,
+    required String apiKey,
+    String? folder,
+  }) {
+    final StreamController<UploadProgress> controller =
+        StreamController.broadcast();
+    final cloudinary = Cloudinary.signedConfig(
+      apiKey: apiKey,
+      apiSecret: "47gNxvfqVtpwfC-32sx1W0gYvjk",
+      cloudName: "dbcwetg1q",
+    );
+
+    Map<String, String> uploadedUrls = {}; // Store file keys and URLs
+
+    Future<void> uploadFile(String fileKey, File file) async {
+      String fileName = file.path.split('/').last;
+      try {
+        final response = await cloudinary.upload(
+          file: file.path,
+          fileBytes: file.readAsBytesSync(),
+          resourceType: CloudinaryResourceType.auto,
+          folder: folder ?? 'micons',
+          fileName: fileName,
+          progressCallback: (count, total) {
+            double progress = count / total;
+            controller.add(UploadProgress(
+              fileKey: fileKey,
+              fileName: fileName,
+              progress: progress,
+            ));
+          },
+        );
+        uploadedUrls[fileKey] = response.secureUrl ?? '';
+        controller.add(UploadProgress(
+          fileKey: fileKey,
+          fileName: fileName,
+          progress: 1.0,
+          url: response.secureUrl,
+        ));
+      } catch (e) {
+        controller.add(UploadProgress(
+          fileKey: fileKey,
+          fileName: fileName,
+          progress: 0.0,
+          error: e.toString(),
+        ));
+      }
+    }
+
+    Future.wait(
+            files.entries.map((entry) => uploadFile(entry.key, entry.value)))
+        .then((_) {
+      controller.add(UploadProgress(
+        fileKey: 'all',
+        fileName: 'all',
+        progress: 1.0,
+        urls: uploadedUrls,
+      ));
+      controller.close();
+    });
+    return controller.stream;
   }
 }
