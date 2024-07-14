@@ -48,7 +48,7 @@ In this example, MiCons.badgeCheck is the icon being used, but you can replace M
 
 M-Icons also provides a convenient file uploader feature that allows you to easily upload files to your desired location. Below is an example of how to use the file uploader:
 
-# Upload
+## Upload
 
 ```dart
 MIconsUploader.uploadFiles(
@@ -76,7 +76,7 @@ MIconsUploader.uploadFiles(
   },
 );
 ```
-
+## Upload Example
 
 ```dart
 import 'dart:io';
